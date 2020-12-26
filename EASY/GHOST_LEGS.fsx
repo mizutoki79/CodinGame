@@ -1,47 +1,46 @@
 open System
+open System.Text
 #nowarn "25"
 
 let token = (stdin.ReadLine()).Split ' '
 let W = int token.[0]
 let H = int token.[1]
 
-let diagram = [for i in 0 .. H - 1 do stdin.ReadLine()]
+let topi =
+    stdin.ReadLine()
+    |> Seq.mapi (fun i v -> if v <> ' ' then Some(i, v) else None)
+    |> Seq.choose id
+    |> Seq.toList
+let lineIndexes = topi |> List.toSeq |> Seq.map fst |> Seq.toList
 
-let top = [
-    for i in 0 .. W - 1 do
-        if diagram.[0].[i] <> ' ' then
-            (diagram.[0].[i], i)
-        else ()
-]
+let lineCount = Seq.length lineIndexes
+let moveTable = Seq.init H (fun _ -> Array.zeroCreate<Char> lineCount) |> Seq.toArray
+for h in 1 .. H - 2 do
+    let line = stdin.ReadLine()
+    for lineNumber in 0 .. lineCount - 1 do
+        let originColumnNum = lineIndexes.[lineNumber]
+        if lineNumber > 0 && line.[originColumnNum - 1] = '-' then
+            moveTable.[h].[lineNumber] <- 'l'
+        if lineNumber < lineCount - 1 && line.[originColumnNum + 1] = '-' then
+            moveTable.[h].[lineNumber] <- 'r'
 
-let bottom = [
-    for i in 0 .. W - 1 do
-        if diagram.[H - 1].[i] <> ' ' then
-            (diagram.[H - 1].[i], i)
-        else ()
-]
+let bottom =
+    stdin.ReadLine()
+    |> Seq.mapi (fun i v -> (i, v))
+    |> Seq.filter (fun (i, v) -> Seq.contains i lineIndexes)
+    |> Seq.map snd
+    |> Seq.toList
 
-let move = Seq.init H (fun _ -> Array.zeroCreate<Char> W) |> Array.ofSeq
-for (T, c) in top do
-    for i in 1 .. H - 2 do
-        if c > 0 && diagram.[i].[c - 1] = '-' then
-            move.[i].[c] <- 'l'
-        if c < W - 1 && diagram.[i].[c + 1] = '-' then
-            move.[i].[c] <- 'r'
-
-let rec down i n =
-    let j = top.[n] |> snd
-    if i >= H - 1 then bottom.[n] |> fst
-    elif move.[i].[j] = 'r' then
-        down (i + 1) (n + 1)
-    elif move.[i].[j] = 'l' then
-        down (i + 1) (n - 1)
+let rec down h w =
+    if h >= H - 1 then bottom.[w]
+    elif moveTable.[h].[w] = 'r' then
+        down (h + 1) (w + 1)
+    elif moveTable.[h].[w] = 'l' then
+        down (h + 1) (w - 1)
     else
-        down (i + 1) n
+        down (h + 1) w
 
-let num = top |> List.length
-let mutable result = Array.zeroCreate<String> num
-for n = 0 to num - 1 do
-    let (T, c) = top.[n]
+for n = 0 to lineCount - 1 do
+    let T = topi.[n] |> snd
     let B = down 0 n
     printfn "%c%c" T B
