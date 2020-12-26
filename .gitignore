@@ -4,3 +4,7 @@ CodinGame.csproj
 .vscode
 Program.exe
 /Workspaces
+
+# ionide-fsharp
+.fake
+.ionide
