@@ -1,48 +1,21 @@
 open System
+let readInt = stdin.ReadLine>>int
 
-let N = stdin.ReadLine() |> int
-let L = stdin.ReadLine() |> int
-let placement = Seq.init N (fun _ -> stdin.ReadLine().Split ' ') |> Seq.toArray
+let N, L = readInt(), readInt()
+let candleIndexes =
+    Seq.init N (fun h ->
+        stdin.ReadLine()
+        |> Seq.filter ((<>)' ')
+        |> Seq.indexed
+        |> Seq.filter (snd>>(=)'C')
+        |> Seq.map (fun (w, _) -> (h, w)))
+    |> Seq.concat
+    |> Seq.toList
 
-let lightTable = Seq.init N (fun _ -> Array.zeroCreate<int> N) |> Seq.toArray
-
-let rec lightUp i j l =
-    if i < 0 || j < 0 || i >= N || j >= N then
-        ()
-    else
-        lightTable.[i].[j] <- max lightTable.[i].[j]  l
-        if l > 1 then
-            lightUp (i - 1) j (l - 1)
-            lightUp (i + 1) j (l - 1)
-            lightUp (i - 1) (j - 1) (l - 1)
-            lightUp (i + 1) (j - 1) (l - 1)
-            lightUp (i - 1) (j + 1) (l - 1)
-            lightUp (i + 1) (j + 1) (l - 1)
-            lightUp i (j - 1) (l - 1)
-            lightUp i (j + 1) (l - 1)
-            lightUp (i - 1) (j - 1) (l - 1)
-            lightUp (i - 1) (j + 1) (l - 1)
-            lightUp (i + 1) (j - 1) (l - 1)
-            lightUp (i + 1) (j + 1) (l - 1)
-
-let printTable () =
-    for i in 0 .. N - 1 do
-       eprintfn "%A" lightTable.[i]
-
-
-let rec check i j =
-    let cell = placement.[i].[j]
-    if cell = "C" then
-        lightUp i j L
-    if j < N - 1 then
-        check i (j + 1)
-    elif i < N - 1 then
-        check (i + 1) 0
-
-check 0 0
-let mutable countDark = 0
-for i in 0 .. N - 1 do
-    for j in 0 .. N - 1 do
-        if lightTable.[i].[j] = 0 then
-            countDark <- countDark + 1
-countDark |> printfn "%d"
+Seq.init (N * N) (fun n ->
+    candleIndexes
+    |> Seq.forall (fun (ci, cj) ->
+        let (i, j) = (n / N, n % N) in L - max (abs(i - ci)) (abs(j - cj)) <= 0))
+    |> Seq.filter id
+    |> Seq.length
+    |> printfn "%d"
