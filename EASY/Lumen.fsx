@@ -16,6 +16,6 @@ Seq.init (N * N) (fun n ->
     candleIndexes
     |> Seq.forall (fun (ci, cj) ->
         let (i, j) = (n / N, n % N) in L - max (abs(i - ci)) (abs(j - cj)) <= 0))
-    |> Seq.filter id
-    |> Seq.length
-    |> printfn "%d"
+|> Seq.filter id
+|> Seq.length
+|> printfn "%d"
